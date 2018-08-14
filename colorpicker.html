@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Color picker</title>
+  <style type="text/css">
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    main > div, #controls > div {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    #color-preview {
+      width: 256px;
+      height: 256px;
+      background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMjHxIGmVAAAAK0lEQVQ4T2P4jwPsxwFGNSADqDwGIF0DlMYAUH0YYFQDMoDKYwASNfz/DwCnEJ0fIpJi8gAAAABJRU5ErkJggg==');
+    }
+
+    #color-preview > div {
+      width: 100%;
+      height: 100%;
+    }
+
+    label, input {
+      display: block;
+    }
+
+    #ranges > input {
+      -webkit-appearance: none;
+    }
+
+    #white {
+      background-color: white; 
+    }
+
+    #black {
+      background-color: black;
+    }
+
+    p {
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="color-preview"><div></div></div>
+    <div>
+      <div id="controls">
+        <div id="labels">
+          <label for="red">Red:</label>
+          <label for="green">Green:</label>
+          <label for="blue">Blue:</label>
+          <label for="alpha">Alpha:</label>
+        </div>
+        <div id="ranges">
+          <input type="range" class="red" value="0" min="0" max="255" autocomplete="off">
+          <input type="range" class="green" value="0" min="0" max="255" autocomplete="off">
+          <input type="range" class="blue" value="0" min="0" max="255" autocomplete="off">
+          <input type="range" class="alpha" value="1" min="0" max="1" step="0.001" autocomplete="off">
+        </div>
+        <div id="boxes">
+          <input type="number" id="red" value="0" min="0" max="255" autocomplete="off">
+          <input type="number" id="green" value="0" min="0" max="255" autocomplete="off">
+          <input type="number" id="blue" value="0" min="0" max="255" autocomplete="off">
+          <input type="number" id="alpha" value="1" min="0" max="1" step="0.001" autocomplete="off">
+        </div>
+      </div>
+      <div>
+        <p id="white">Here is the selected color against white.</p>
+        <p id="black">Here is the selected color against black.</p>
+        <select id="format">
+          <option value="source" selected>Source engine (R G B A)</option>
+          <option value="hex">Hexadecimal (RRGGBBAA)</option>
+          <option value="html">HTML (rgba(R, G, B, A))</option>
+        </select>
+        <input type="text" readonly id="output" value="0 0 0 0">
+      </div>
+    </div>
+  </main>
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+      'use strict';
+      var div = document.querySelector('#color-preview > div');
+      var color = {red: 0, green: 0, blue: 0, alpha: 1};
+      var controls = document.getElementById('controls');
+      var red = controls.querySelector('.red');
+      var green = controls.querySelector('.green');
+      var blue = controls.querySelector('.blue');
+      var alpha = controls.querySelector('.alpha');
+      var format = document.getElementById('format');
+      var output = document.getElementById('output');
+      var black = document.getElementById('black');
+      var white = document.getElementById('white');
+
+      function interp_alpha(alpha) {
+        return Math.round(alpha * 255);
+      }
+
+      function left_pad(string) {
+        if (string.length === 1) {
+          return "0" + string;
+        }
+        return string;
+      }
+
+      var formats = {
+        source() {
+          return [
+            color.red,
+            color.green,
+            color.blue,
+            interp_alpha(color.alpha)
+          ].join(' ');
+        },
+        hex() {
+          return [
+            left_pad(color.red.toString(16)),
+            left_pad(color.green.toString(16)),
+            left_pad(color.blue.toString(16)),
+            left_pad(interp_alpha(color.alpha).toString(16))
+          ].join('');
+        },
+        html() {
+          return `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
+        }
+      }
+
+      function update_color() {
+        div.style.backgroundColor = white.style.color = black.style.color = formats.html();
+
+        red.style.backgroundImage = `linear-gradient(to right,
+          rgba(0, ${color.green}, ${color.blue}, ${color.alpha}),
+          rgba(255, ${color.green}, ${color.blue}, ${color.alpha})
+        )`;
+
+        green.style.backgroundImage = `linear-gradient(to right,
+          rgba(${color.red}, 0, ${color.blue}, ${color.alpha}),
+          rgba(${color.red}, 255, ${color.blue}, ${color.alpha})
+        )`;
+
+        blue.style.backgroundImage = `linear-gradient(to right,
+          rgba(${color.red}, ${color.green}, 0, ${color.alpha}),
+          rgba(${color.red}, ${color.green}, 255, ${color.alpha})
+        )`;
+
+        alpha.style.backgroundImage = `linear-gradient(to right,
+          rgba(${color.red}, ${color.green}, ${color.blue}, 0),
+          rgba(${color.red}, ${color.green}, ${color.blue}, 1)
+        )`;
+
+        output.value = formats[format.value]();
+      }
+
+      controls.querySelectorAll('input[type="range"]').forEach(function (range) {
+        var number = document.getElementById(range.className);
+        range.addEventListener('input', function () {
+          number.value = color[range.className] = parseFloat(range.value, 10);
+          update_color();
+        });
+      });
+
+      controls.querySelectorAll('input[type="number"]').forEach(function (number) {
+        var range = controls.querySelector('.' + number.id);
+        var max = parseFloat(number.max, 10);
+        var min = parseFloat(number.min, 10);
+        number.addEventListener('input', function () {
+          var v = parseFloat(number.value, 10);
+          if (v < min) {
+            v = min;
+          } else if (v > max) {
+            v = max;
+          }
+          number.value = range.value = color[number.id] = v;
+          update_color();
+        });
+      });
+
+      format.addEventListener('input', update_color);
+      output.addEventListener('focus', output.select);
+
+      update_color();
+    });
+  </script>
+</body>
+</html>
