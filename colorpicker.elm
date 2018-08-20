@@ -77,7 +77,7 @@ to_hex_string n =
 
 interp : Float -> Int
 interp alpha =
-    round alpha * 255
+    round (alpha * 255)
 
 
 format_rgba : Color -> String
