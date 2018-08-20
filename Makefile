@@ -2,7 +2,7 @@ all: dist/colorpicker.js
 
 .PHONY: run
 
-elm-stuff:
+elm-stuff: elm-package.json
 	elm-package install
 
 dist/colorpicker.js: elm-stuff colorpicker.elm
