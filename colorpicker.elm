@@ -283,7 +283,7 @@ view mdl =
                     , input
                         [ type_ "number"
                         , id "blue"
-                        , value (toString model.blue)
+                        , value (toString mdl.blue)
                         , Html.Attributes.min "0"
                         , Html.Attributes.max "255"
                         , autocomplete False
