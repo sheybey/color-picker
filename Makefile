@@ -5,8 +5,8 @@ all: dist/colorpicker.js
 elm-stuff: elm-package.json
 	elm-package install
 
-dist/colorpicker.js: elm-stuff colorpicker.elm
-	elm-make --warn --output dist/colorpicker.js colorpicker.elm
+colorpicker.js: elm-stuff colorpicker.elm
+	elm-make --warn --output colorpicker.js colorpicker.elm
 
-run: dist/colorpicker.js
+run: colorpicker.js
 	x-www-browser colorpicker.html
