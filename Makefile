@@ -1,4 +1,4 @@
-all: dist/colorpicker.js
+all: colorpicker.js
 
 .PHONY: run
 
