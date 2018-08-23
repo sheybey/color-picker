@@ -1,12 +1,12 @@
 all: colorpicker.js
 
-.PHONY: run
+.PHONY: run all clean
 
-elm-stuff: elm-package.json
-	elm-package install
-
-colorpicker.js: elm-stuff colorpicker.elm
-	elm-make --warn --output colorpicker.js colorpicker.elm
+colorpicker.js: colorpicker.elm
+	elm make --optimize --output colorpicker.js colorpicker.elm
 
 run: colorpicker.js
 	x-www-browser colorpicker.html
+
+clean:
+	rm -f colorpicker.js
