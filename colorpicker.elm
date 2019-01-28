@@ -36,6 +36,7 @@ type Msg
     | ChangeBlue String
     | ChangeAlpha String
     | ChangeFormat String
+    | ChangeOutput String
 
 
 find : List a -> (a -> Bool) -> Maybe a
@@ -135,6 +136,16 @@ interp alpha =
     round (alpha * 255)
 
 
+reverse_interp : Int -> Float
+reverse_interp alpha =
+    (toFloat alpha) / 255.0
+
+
+clamp : number -> number -> number -> number
+clamp value minimum maximum =
+    Basics.min (Basics.max value minimum) maximum
+
+
 format_rgba : Color -> String
 format_rgba { red, green, blue, alpha } =
     "rgba("
@@ -215,6 +226,108 @@ model =
     }
 
 
+unpack_maybe : List (Maybe a) -> Maybe a
+unpack_maybe list =
+    case List.head list of
+        Just maybe ->
+            maybe
+
+        Nothing ->
+            Nothing
+
+
+unpack_maybe_tail : List (Maybe a) -> (List (Maybe a) -> Maybe b) -> Maybe b
+unpack_maybe_tail list callback =
+    case List.tail list of
+        Just tail ->
+            callback tail
+
+        Nothing ->
+            Nothing
+
+
+list_to_alpha : List (Maybe Int) -> Maybe { alpha : Float }
+list_to_alpha alpha =
+    case unpack_maybe alpha of
+        Just a ->
+            Just { alpha = clamp (reverse_interp a) 0 1 }
+
+        Nothing ->
+            Nothing
+
+
+list_to_blue_alpha : List (Maybe Int) -> Maybe { blue : Int, alpha : Float }
+list_to_blue_alpha blue_alpha =
+    case unpack_maybe blue_alpha of
+        Just blue ->
+            case unpack_maybe_tail blue_alpha list_to_alpha of
+                Just a ->
+                    Just { blue = clamp blue 0 255, alpha = a.alpha }
+
+                Nothing ->
+                    Nothing
+
+        Nothing ->
+            Nothing
+
+
+list_to_green_blue_alpha :
+    List (Maybe Int)
+    ->
+        Maybe
+            { green : Int
+            , blue : Int
+            , alpha : Float
+            }
+list_to_green_blue_alpha green_blue_alpha =
+    case unpack_maybe green_blue_alpha of
+        Just green ->
+            case unpack_maybe_tail green_blue_alpha list_to_blue_alpha of
+                Just blue_alpha ->
+                    Just
+                        { green = clamp green 0 255
+                        , blue = blue_alpha.blue
+                        , alpha = blue_alpha.alpha
+                        }
+
+                Nothing ->
+                    Nothing
+
+        Nothing ->
+            Nothing
+
+
+model_from_maybe_list : List (Maybe Int) -> Maybe Model
+model_from_maybe_list red_green_blue_alpha =
+    case unpack_maybe red_green_blue_alpha of
+        Just red ->
+            case
+                (unpack_maybe_tail
+                    red_green_blue_alpha
+                    list_to_green_blue_alpha
+                )
+            of
+                Just green_blue_alpha ->
+                    Just
+                        { format = default_format
+                        , red = clamp red 0 255
+                        , green = green_blue_alpha.green
+                        , blue = green_blue_alpha.blue
+                        , alpha = green_blue_alpha.alpha
+                        }
+
+                Nothing ->
+                    Nothing
+
+        Nothing ->
+            Nothing
+
+
+model_from_string : String -> Maybe Model
+model_from_string source_color =
+    model_from_maybe_list (List.map (String.toInt) (String.words source_color))
+
+
 update : Msg -> Model -> Model
 update msg mdl =
     case msg of
@@ -237,6 +350,9 @@ update msg mdl =
                         default_format
                         (string_to_format format)
             }
+
+        ChangeOutput source_color ->
+            Maybe.withDefault mdl (model_from_string source_color)
 
 
 view : Model -> Html Msg
@@ -378,12 +494,16 @@ view mdl =
                     , style "color" (format_rgba (model_to_color mdl))
                     ]
                     [ text "This is the selected color against black." ]
-                , select [ id "format", onInput ChangeFormat ]
+                , select
+                    [ id "format"
+                    , onInput ChangeFormat
+                    , value mdl.format.name
+                    ]
                     (List.map option_format formats)
                 , input
                     [ type_ "text"
-                    , readonly True
                     , value (format_output mdl)
+                    , onInput ChangeOutput
                     ]
                     []
                 ]
