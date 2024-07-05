@@ -1,0 +1,16 @@
+{
+    "folders": [{
+        "path": ".",
+        "folder_exclude_patterns": ["elm-stuff", "node_modules", ".git", "dist"]
+    }],
+    "settings": {
+        "LSP": {
+            "LSP-tailwindcss":{
+                "selector": "source.elm | text.html",
+                "settings": {
+                    "tailwindCSS.experimental.classRegex": ["class\\s+\"([^\"]*)\""]
+                }
+            }
+        }
+    }
+}

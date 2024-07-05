@@ -1,0 +1,30 @@
+{
+  "name": "color-picker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sheybey/color-picker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sheybey/color-picker/issues"
+  },
+  "homepage": "https://github.com/sheybey/color-picker#readme",
+  "dependencies": {
+    "autoprefixer": "^10.4.19",
+    "elm-format": "^0.8.7",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.4",
+    "vite": "^5.3.3",
+    "vite-plugin-elm": "^3.0.1"
+  }
+}
