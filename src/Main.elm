@@ -270,6 +270,7 @@ type alias Model =
     , color : RGBA
     , format : OutputFormat
     , renderBold : Bool
+    , renderSize : String
     , renderFont : String
     , previewBackground : String
     }
@@ -283,6 +284,7 @@ type Msg
     | ChangeFormat String
     | ChangeOutput String
     | ChangeBold Bool
+    | ChangeSize String
     | ChangeFont String
     | ChangePreviewBackground String
 
@@ -292,9 +294,14 @@ formatOutput mdl =
     mdl.format.function mdl.color
 
 
-optionFormat : OutputFormat -> Html Msg
-optionFormat fmt =
-    option [ value fmt.name ] [ text fmt.description ]
+createOption : String -> ( String, String ) -> Html Msg
+createOption mdl ( value_, text_ ) =
+    option [ value value_, selected (value_ == mdl) ] [ text text_ ]
+
+
+optionFormat : Model -> OutputFormat -> Html Msg
+optionFormat mdl fmt =
+    createOption mdl.format.name ( fmt.name, fmt.description )
 
 
 defaultFormat : OutputFormat
@@ -339,6 +346,7 @@ model =
     , color = defaultColor
     , format = defaultFormat
     , renderBold = False
+    , renderSize = "text-md"
     , renderFont = "sans-serif"
     , previewBackground = "#000000"
     }
@@ -482,6 +490,9 @@ update msg mdl =
         ChangeFont font ->
             { mdl | renderFont = font }
 
+        ChangeSize size ->
+            { mdl | renderSize = size }
+
         ChangePreviewBackground background ->
             { mdl | previewBackground = background }
 
@@ -624,12 +635,32 @@ previewText : Model -> String -> Html Msg
 previewText mdl background =
     p
         [ class "px-2 py-1"
+        , class mdl.renderSize
         , classList [ ( "font-bold", mdl.renderBold ) ]
         , style "color" (formatRGBA mdl.color)
         , style "background-color" background
         , style "font-family" mdl.renderFont
         ]
         [ text ("This is the selected color against " ++ background ++ ".") ]
+
+
+previewSizes : List ( String, String )
+previewSizes =
+    [ ( "text-sm", "Small" )
+    , ( "text-md", "Medium" )
+    , ( "text-lg", "Large" )
+    , ( "text-xl", "XL" )
+    , ( "text-2xl", "2XL" )
+    , ( "text-3xl", "3XL" )
+    ]
+
+
+previewFonts : List ( String, String )
+previewFonts =
+    [ ( "sans-serif", "Sans Serif" )
+    , ( "serif", "Serif" )
+    , ( "monospace", "Monospace" )
+    ]
 
 
 view : Model -> Html Msg
@@ -641,11 +672,12 @@ view mdl =
         [ div [ id "color-preview" ]
             [ div
                 [ class "w-full h-full"
-                , style "background-color" (formatRGBA mdl.color) ]
+                , style "background-color" (formatRGBA mdl.color)
+                ]
                 []
             ]
         , div
-            [ class "flex flex-col gap-2" ]
+            [ class "flex flex-col gap-2 max-w-full px-4" ]
             [ div
                 [ class "grid grid-cols-ranges gap-2"
                 , class "justify-content-start items-center"
@@ -664,10 +696,12 @@ view mdl =
                 , numberInput mdl Alpha
                 ]
             , div
-                [ class "flex items-center justify-between flex-wrap mt-2 gap-y-2" ]
+                [ class "flex items-center justify-between flex-wrap"
+                , class "mt-2 gap-y-2"
+                ]
                 [ div
                     [ class "flex items-center gap-2" ]
-                    [ label [ for "render-bold" ] [ text "Bold" ]
+                    [ label [ for "render-bold" ] [ text "Bold:" ]
                     , input
                         [ type_ "checkbox"
                         , id "render-bold"
@@ -675,6 +709,21 @@ view mdl =
                         , onInput (\_ -> ChangeBold (not mdl.renderBold))
                         ]
                         []
+                    ]
+                , div
+                    [ class "flex items-center gap-2" ]
+                    [ label [ for "render-size" ] [ text "Size:" ]
+                    , select
+                        ([ id "render-size"
+                         , value mdl.renderSize
+                         , onInput ChangeSize
+                         ]
+                            ++ inputStyles
+                        )
+                        (List.map
+                            (createOption mdl.renderSize)
+                            previewSizes
+                        )
                     ]
                 , div
                     [ class "flex items-center gap-2" ]
@@ -686,10 +735,10 @@ view mdl =
                          ]
                             ++ inputStyles
                         )
-                        [ option [ value "sans-serif" ] [ text "Sans Serif" ]
-                        , option [ value "serif" ] [ text "Serif" ]
-                        , option [ value "monospace" ] [ text "Monospace" ]
-                        ]
+                        (List.map
+                            (createOption mdl.renderFont)
+                            previewFonts
+                        )
                     ]
                 ]
             , previewText mdl "white"
@@ -713,7 +762,7 @@ view mdl =
                  ]
                     ++ inputStyles
                 )
-                (List.map optionFormat formats)
+                (List.map (optionFormat mdl) formats)
             , div
                 [ class "gap-2 flex items-center" ]
                 [ input
@@ -728,6 +777,7 @@ view mdl =
                 ]
             ]
         ]
+
 
 main =
     Browser.sandbox { init = model, update = update, view = view }
