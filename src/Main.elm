@@ -755,14 +755,18 @@ view mdl =
                     []
                 , previewText mdl mdl.previewBackground
                 ]
-            , select
-                ([ id "format"
-                 , onInput ChangeFormat
-                 , value mdl.format.name
-                 ]
-                    ++ inputStyles
-                )
-                (List.map (optionFormat mdl) formats)
+            , div [ class "flex gap-2 items-center" ]
+                [ label [ for "format" ] [ text "Format:" ]
+                , select
+                    ([ id "format"
+                     , class "flex-grow"
+                     , onInput ChangeFormat
+                     , value mdl.format.name
+                     ]
+                        ++ inputStyles
+                    )
+                    (List.map (optionFormat mdl) formats)
+                ]
             , div
                 [ class "gap-2 flex items-center" ]
                 [ input
