@@ -636,11 +636,12 @@ view : Model -> Html Msg
 view mdl =
     main_
         [ class "flex items-center justify-center flex-wrap"
-        , class "gap-5 w-full min-h-full py-5"
+        , class "gap-5 w-full"
         ]
         [ div [ id "color-preview" ]
             [ div
-                [ style "background-color" (formatRGBA mdl.color) ]
+                [ class "w-full h-full"
+                , style "background-color" (formatRGBA mdl.color) ]
                 []
             ]
         , div
@@ -727,7 +728,6 @@ view mdl =
                 ]
             ]
         ]
-
 
 main =
     Browser.sandbox { init = model, update = update, view = view }

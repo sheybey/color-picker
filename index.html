@@ -3,10 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="./index.css">
   <title>Color picker</title>
 </head>
-<body>
+<body class="min-h-screen w-screen flex flex-col items-center justify-center gap-5 py-5 overflow-y-auto">
   <script type="module" src="./index.js"></script>
-  <div id="root"></div>
+  <div class="h-auto"><div id="root">Loading...</div></div>
+  <footer class="flex flex-wrap justify-center gap-10">
+    <span>
+      Made with
+      <a
+        class="text-blue-600 hover:underline"
+        href="https://elm-lang.org"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Elm
+      </a>
+    </span>
+    <a
+      class="text-blue-600 hover:underline"
+      href="https://github.com/sheybey/color-picker"
+      target="_blank"
+      rel="noreferrer"
+    >
+      Source code
+    </a>
+  </footer>
 </body>
 </html>

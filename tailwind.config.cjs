@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/Main.elm'],
+  content: ['./index.html', './src/Main.elm'],
   theme: {
     extend: {
       gridTemplateColumns: {
