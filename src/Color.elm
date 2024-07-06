@@ -278,12 +278,11 @@ colorFromString sourceColor =
 
 colorFromHexString : String -> Result String RGB
 colorFromHexString color =
-    let
-        digits =
-            String.dropLeft 1 color
-    in
-    if String.length digits == 6 then
+    if String.length color == 7 && String.startsWith "#" color then
         let
+            digits =
+                String.dropLeft 1 color
+
             rs =
                 String.slice 0 2 digits
 
