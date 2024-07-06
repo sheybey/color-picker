@@ -133,6 +133,11 @@ isByte n =
     n >= 0 && n <= 255
 
 
+roundByte : Float -> Int
+roundByte byte =
+    Basics.clamp 0 255 (Basics.round byte)
+
+
 parseByte : String -> Maybe Int
 parseByte s =
     String.toInt s
@@ -269,3 +274,30 @@ colorFromString sourceColor =
     Maybe.withDefault
         Nothing
         (Maybe.map4 colorFromSourceValues red green blue alpha)
+
+
+colorFromHexString : String -> Result String RGB
+colorFromHexString color =
+    let
+        digits =
+            String.dropLeft 1 color
+    in
+    if String.length digits == 6 then
+        let
+            rs =
+                String.slice 0 2 digits
+
+            gs =
+                String.slice 2 4 digits
+
+            bs =
+                String.slice 4 6 digits
+        in
+        Result.map3
+            (\r g b -> { red = r, green = g, blue = b })
+            (Hex.fromString rs)
+            (Hex.fromString gs)
+            (Hex.fromString bs)
+
+    else
+        Err "Not a hex color string"

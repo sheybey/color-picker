@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Accessibility exposing (contrastToString, getContrast)
 import Browser
 import Color exposing (..)
 import Html
@@ -13,6 +14,7 @@ import Html
         , option
         , p
         , select
+        , span
         , text
         )
 import Html.Attributes exposing (..)
@@ -363,17 +365,46 @@ numberInput mdl component =
         []
 
 
+roundTo : Int -> Float -> String
+roundTo places f =
+    let
+        mult =
+            toFloat (10 ^ places)
+    in
+    String.fromFloat (toFloat (round (mult * f)) / mult)
+
+
 previewText : Model -> String -> Html Msg
 previewText mdl background =
-    p
-        [ class "px-2 py-1"
-        , class mdl.renderSize
-        , classList [ ( "font-bold", mdl.renderBold ) ]
-        , style "color" (formatRGBA mdl.color)
-        , style "background-color" background
-        , style "font-family" mdl.renderFont
+    let
+        contrast =
+            getContrast mdl.color (backgroundColor background)
+
+        ratio =
+            roundTo 2 contrast.ratio
+    in
+    div []
+        [ span [ class "pb-2 text-sm" ]
+            [ text "Contrast: "
+            , text ratio
+            , text ", "
+            , text (contrastToString contrast.normal)
+            , text ". Large text: "
+            , text (contrastToString contrast.large)
+            ]
+        , p
+            [ class "px-2 py-1"
+            , class mdl.renderSize
+            , classList [ ( "font-bold", mdl.renderBold ) ]
+            , style "color" (formatRGBA mdl.color)
+            , style "background-color" background
+            , style "font-family" mdl.renderFont
+            ]
+            [ text "This is the selected color against "
+            , text background
+            , text "."
+            ]
         ]
-        [ text ("This is the selected color against " ++ background ++ ".") ]
 
 
 previewSizes : List ( String, String )
@@ -393,6 +424,24 @@ previewFonts =
     , ( "serif", "Serif" )
     , ( "monospace", "Monospace" )
     ]
+
+
+backgroundColor : String -> RGB
+backgroundColor color =
+    let
+        black =
+            { red = 0, green = 0, blue = 0 }
+    in
+    case color of
+        "white" ->
+            { red = 255, green = 255, blue = 255 }
+
+        "black" ->
+            black
+
+        _ ->
+            colorFromHexString color
+                |> Result.withDefault black
 
 
 view : Model -> Html Msg
