@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Accessibility exposing (contrastToString, getContrast)
 import Browser
@@ -18,7 +18,10 @@ import Html
         , text
         )
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
+
+
+port copy : String -> Cmd msg
 
 
 find : List a -> (a -> Bool) -> Maybe a
@@ -107,7 +110,7 @@ type alias Model =
     }
 
 
-type Msg
+type ChangeModelMsg
     = ChangeRed String
     | ChangeGreen String
     | ChangeBlue String
@@ -118,6 +121,16 @@ type Msg
     | ChangeSize String
     | ChangeFont String
     | ChangePreviewBackground String
+
+
+type Msg
+    = CopyOutput
+    | ChangeModel ChangeModelMsg
+
+
+changeModel : (a -> ChangeModelMsg) -> a -> Msg
+changeModel msg a =
+    ChangeModel (msg a)
 
 
 formatOutput : Model -> String
@@ -140,8 +153,8 @@ model =
     }
 
 
-update : Msg -> Model -> Model
-update msg mdl =
+updateModel : ChangeModelMsg -> Model -> Model
+updateModel msg mdl =
     let
         oldColor =
             mdl.color
@@ -231,6 +244,16 @@ update msg mdl =
             { mdl | previewBackground = background }
 
 
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg mdl =
+    case msg of
+        ChangeModel changeMsg ->
+            ( updateModel changeMsg mdl, Cmd.none )
+
+        CopyOutput ->
+            ( mdl, copy (mdl.format.function mdl.color) )
+
+
 inputStyles : List (Html.Attribute Msg)
 inputStyles =
     [ class "bg-transparent order-0 py-1 px-1.5"
@@ -263,8 +286,8 @@ inputConstraints component =
     ]
 
 
-componentToMsg : RGBAComponent -> (String -> Msg)
-componentToMsg component =
+componentToChangeMsg : RGBAComponent -> (String -> ChangeModelMsg)
+componentToChangeMsg component =
     case component of
         Red ->
             ChangeRed
@@ -277,6 +300,11 @@ componentToMsg component =
 
         Alpha ->
             ChangeAlpha
+
+
+componentToMsg : RGBAComponent -> String -> Msg
+componentToMsg component s =
+    ChangeModel (componentToChangeMsg component s)
 
 
 rangeInput : Model -> RGBAComponent -> Html Msg
@@ -487,7 +515,7 @@ view mdl =
                         [ type_ "checkbox"
                         , id "render-bold"
                         , checked mdl.renderBold
-                        , onInput (\_ -> ChangeBold (not mdl.renderBold))
+                        , onInput (\_ -> changeModel ChangeBold (not mdl.renderBold))
                         ]
                         []
                     ]
@@ -497,7 +525,7 @@ view mdl =
                     , select
                         ([ id "render-size"
                          , value mdl.renderSize
-                         , onInput ChangeSize
+                         , onInput (changeModel ChangeSize)
                          ]
                             ++ inputStyles
                         )
@@ -512,7 +540,7 @@ view mdl =
                     , select
                         ([ id "render-font"
                          , value mdl.renderFont
-                         , onInput ChangeFont
+                         , onInput (changeModel ChangeFont)
                          ]
                             ++ inputStyles
                         )
@@ -529,7 +557,7 @@ view mdl =
                 [ input
                     ([ type_ "color"
                      , value mdl.previewBackground
-                     , onInput ChangePreviewBackground
+                     , onInput (changeModel ChangePreviewBackground)
                      ]
                         ++ inputStyles
                     )
@@ -541,7 +569,7 @@ view mdl =
                 , select
                     ([ id "format"
                      , class "flex-grow"
-                     , onInput ChangeFormat
+                     , onInput (changeModel ChangeFormat)
                      , value mdl.format.name
                      ]
                         ++ inputStyles
@@ -550,10 +578,11 @@ view mdl =
                 ]
             , div
                 [ class "gap-2 flex items-center" ]
-                [ input
+                [ button (onClick CopyOutput :: inputStyles) [ text "Copy" ]
+                , input
                     ([ type_ "text"
                      , value (formatOutput mdl)
-                     , onInput ChangeOutput
+                     , onInput (changeModel ChangeOutput)
                      , class "flex-grow"
                      ]
                         ++ inputStyles
@@ -564,5 +593,21 @@ view mdl =
         ]
 
 
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( model, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
+
+
+main : Program () Model Msg
 main =
-    Browser.sandbox { init = model, update = update, view = view }
+    Browser.element
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }
